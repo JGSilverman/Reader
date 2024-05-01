@@ -1,3 +1,10 @@
+html, body {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    line-height: 1.5;
+}
+
 h1:focus {
     outline: none;
 }
@@ -30,3 +37,12 @@ h1:focus {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+
+.rz-header {
+    background-color: #f6695e !important;
+}
+
+.rz-sidebar-toggle:focus-visible, .rz-sidebar-toggle:hover {
+    background-color: #f6695e !important;
+}

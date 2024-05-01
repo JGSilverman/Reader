@@ -1,9 +1,17 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Reader.DataAccess;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+builder.Services.AddDbContextFactory<RentMeDbContext>(options =>
+    options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"), 
+    ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
+
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
@@ -16,7 +24,7 @@ builder.Services.AddAuthentication(cfg =>
 })
 .AddJwtBearer(cfg =>
 {
-    cfg.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+    cfg.TokenValidationParameters = new TokenValidationParameters()
     {
         ValidateIssuer = true,
         ValidIssuer = builder.Configuration["Tokens:Issuer"],
