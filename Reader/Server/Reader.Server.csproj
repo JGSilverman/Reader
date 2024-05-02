@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\Reader.DataAccess\Reader.DataAccess.csproj" />
     <ProjectReference Include="..\..\Reader.Domain\Reader.Domain.csproj" />
     <ProjectReference Include="..\Client\Reader.Client.csproj" />
+    <ProjectReference Include="..\Reader.Services\Reader.Services.csproj" />
     <ProjectReference Include="..\Shared\Reader.Shared.csproj" />
   </ItemGroup>
 

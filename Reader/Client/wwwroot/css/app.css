@@ -46,3 +46,11 @@ h1:focus {
 .rz-sidebar-toggle:focus-visible, .rz-sidebar-toggle:hover {
     background-color: #f6695e !important;
 }
+
+.rz-menu:not(.rz-profile-menu) {
+    background-color: transparent !important;
+}
+
+.rz-button.rz-primary {
+    background-color: #f6695e !important;
+}

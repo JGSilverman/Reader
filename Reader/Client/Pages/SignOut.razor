@@ -1,0 +1,14 @@
+﻿@page "/signout"
+@using Reader.Client.Services
+
+@inject IServiceScopeFactory _serviceScopeFactory
+@inject NavigationManager _navManager
+@inject AuthStateProvider _authStateProvider
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await _authStateProvider.Logout();
+        _navManager.NavigateTo("/");
+    }
+}

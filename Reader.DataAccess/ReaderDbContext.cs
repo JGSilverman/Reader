@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Reader.Domain;
 
 namespace Reader.DataAccess
 {
-    public class RentMeDbContext : DbContext
+    public class ReaderDbContext : IdentityDbContext<AppUser>
     {
-        public RentMeDbContext(DbContextOptions<RentMeDbContext> options) : base(options)
+        public ReaderDbContext(DbContextOptions<ReaderDbContext> options) : base(options)
         { }
 
 

@@ -1,0 +1,77 @@
+﻿@page "/resendemailconfirmation"
+
+@using System.ComponentModel.DataAnnotations
+@using Reader.Client.Services
+
+
+@inject IServiceScopeFactory _serviceScopeFactory
+@inject NavigationManager _navManager
+@inject NotificationService _notifyService
+@inject AuthStateProvider _authStateProvider
+@inject SpinnerService _spinner
+
+<div class="d-flex justify-content-center mt-5">
+    <RadzenCard>
+        <RadzenText TextStyle="TextStyle.DisplayH3">Resend Email Confirmation</RadzenText>
+        <EditForm Model="_model" OnValidSubmit="ResendEmailConfirmationAsync">
+            <DataAnnotationsValidator />
+
+            <RadzenTextBox class="w-100" id="email" Placeholder="Email" @bind-Value="_model.EmailAddress" />
+            <ValidationMessage For="@(() => _model.EmailAddress)" />
+
+            <RadzenButton Style="margin-top: 2rem"
+                          ButtonStyle="ButtonStyle.Primary"
+                          Text="Resend"
+                          ButtonType=Radzen.ButtonType.Submit />
+        </EditForm>
+        @if (ShowServerError)
+        {
+            <div class="text-danger">@ServerErrorMessage</div>
+        }
+    </RadzenCard>
+</div>
+
+@code {
+    public bool ShowServerError { get; set; }
+    public string ServerErrorMessage { get; set; }
+    ResendEmailConfirmationModel _model { get; set; } = new();
+
+    public async Task ResendEmailConfirmationAsync()
+    {
+        ShowServerError = false;
+        _spinner.Show();
+
+        try
+        {
+            var emailResent = await _authStateProvider.ResendEmailConfirmation(_model.EmailAddress);
+
+            if (emailResent)
+            {
+                _notifyService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Detail = $"E-Mail resent. Please check your email."
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            _notifyService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Detail = $"{ex.Message}"
+                });
+        }
+        finally
+        {
+            _spinner.Hide();
+        }
+    }
+
+    public class ResendEmailConfirmationModel
+    {
+        [EmailAddress]
+        [Required(ErrorMessage = "E-Mail is required")]
+        public string EmailAddress { get; set; }
+    }
+}

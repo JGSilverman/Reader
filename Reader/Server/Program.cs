@@ -1,46 +1,61 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Reader.DataAccess;
+using Reader.Domain;
+using Reader.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
-builder.Services.AddDbContextFactory<RentMeDbContext>(options =>
+builder.Services.AddDbContextFactory<ReaderDbContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"), 
     ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
 
 
-builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages();
+builder.Services.AddIdentity<AppUser, IdentityRole>()
+    .AddEntityFrameworkStores<ReaderDbContext>()
+    .AddDefaultTokenProviders();
 
-#region jwt config
-builder.Services.AddAuthentication(cfg =>
+#region jwt authentication
+var jwtSettings = builder.Configuration.GetSection("JWTSettings");
+
+builder.Services.AddAuthentication(opt =>
 {
-    cfg.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    cfg.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(cfg =>
+    opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
 {
-    cfg.TokenValidationParameters = new TokenValidationParameters()
+    options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["Tokens:Issuer"],
         ValidateAudience = true,
-        ValidAudience = builder.   Configuration["Tokens:Audience"],
+        ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Tokens:Key"]))
+
+        ValidIssuer = jwtSettings["validIssuer"],
+        ValidAudience = jwtSettings["validAudience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["securityKey"]))
     };
 });
 
 #endregion
 
+builder.Services.AddHttpClient();
+builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Reader", Version = "v1" });
 });
+
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<UserRepo>();
+builder.Services.AddScoped<GoogleBookHttpService>();
 
 var app = builder.Build();
 
@@ -65,7 +80,8 @@ app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");

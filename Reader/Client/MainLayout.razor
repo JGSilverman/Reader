@@ -1,37 +1,128 @@
 ﻿@inherits LayoutComponentBase
 
+@inject NavigationManager _navigationManager
+@inject IJSRuntime _jsRuntime
+
 <RadzenComponents/>
 
-<RadzenLayout style="position: relative;grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body'">
-    <RadzenHeader>
-        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
-            <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
-            <RadzenLabel Text="Reader" />
-        </RadzenStack>
-    </RadzenHeader>
-    <RadzenSidebar Responsive="false" @bind-Expanded="@_sidebarExpanded" style="position: absolute; z-index: 3">
-        <RadzenStack AlignItems="AlignItems.End" Class="rz-p-2">
-            <RadzenButton Icon="west" Variant="Variant.Text" ButtonStyle="ButtonStyle.Secondary" Click="@(() => _sidebarExpanded = false)" />
-        </RadzenStack>
-        <RadzenPanelMenu>
-            <RadzenPanelMenuItem Text="Home" Icon="home" />
-            <RadzenPanelMenuItem Text="Users" Icon="account_box" />
-        </RadzenPanelMenu>
-        <div class="rz-p-4">
-            Sidebar
-        </div>
-    </RadzenSidebar>
-    <RadzenBody>
-        <div class="rz-p-4">
+@if (!_isMobileView)
+{
+    <RadzenLayout style="position: relative;grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body'">
+        <RadzenHeader>
+            <div class="px-5">
+                <RadzenStack Orientation="Radzen.Orientation.Horizontal" JustifyContent=JustifyContent.SpaceBetween AlignItems="AlignItems.Center" Gap="0">
+                    <div>
+                        <AuthorizeView>
+                            <Authorized>
+                                <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
+                            </Authorized>
+                        </AuthorizeView>
+                        <RadzenButton ButtonStyle="ButtonStyle.Light"
+                                      Variant="Variant.Text"
+                                      Click="@(() => NavTo("/"))"
+                                      Text="Reader" />
+                    </div>
+                    <AuthorizeView>
+                        <NotAuthorized>
+                            <RadzenMenu>
+                                <RadzenMenuItem Click=@(() => NavTo("/signup")) Text="Sign Up" />
+                                <RadzenMenuItem Click=@(() => NavTo("/signin")) Text="Sign In" />
+                            </RadzenMenu>
+                        </NotAuthorized>
+                        <Authorized>
+                            <div class="px-5">
+                                <RadzenMenu>
+                                    <RadzenMenuItem Text=@context.User.Identity.Name>
+                                        <RadzenMenuItem Click=@(() => NavTo("/signout")) Text="Logout" Icon="logout" />
+                                    </RadzenMenuItem>
+                                </RadzenMenu>
+                            </div>
+                        </Authorized>
+                    </AuthorizeView>
+                </RadzenStack>
+            </div>
+        </RadzenHeader>
+        <AuthorizeView>
+            <Authorized>
+                <RadzenSidebar Responsive="false" @bind-Expanded="@_sidebarExpanded" style="position: absolute; z-index: 3">
+                    <RadzenStack AlignItems="AlignItems.End" Class="rz-p-2">
+                        <RadzenButton Icon="west" Variant="Variant.Text" ButtonStyle="ButtonStyle.Secondary" Click="@(() => _sidebarExpanded = false)" />
+                    </RadzenStack>
+                    <RadzenPanelMenu>
+
+                    </RadzenPanelMenu>
+                </RadzenSidebar>
+            </Authorized>
+        </AuthorizeView>
+
+        <RadzenBody>
             @Body
-        </div>
-    </RadzenBody>
-    @if (_sidebarExpanded)
-    {
-        <div @onclick="@(() => _sidebarExpanded = false)" class="rz-dialog-mask" style="position: absolute; z-index: 2"></div>
-    }
-</RadzenLayout>
+        </RadzenBody>
+        @if (_sidebarExpanded)
+        {
+            <div @onclick="@(() => _sidebarExpanded = false)" class="rz-dialog-mask" style="position: absolute; z-index: 2"></div>
+        }
+    </RadzenLayout>
+}
+else
+{
+    <RadzenLayout style="position: relative;grid-template-areas: 'rz-sidebar rz-header' 'rz-sidebar rz-body'">
+        <RadzenHeader>
+            <div class="px-2">
+                <RadzenStack Orientation="Radzen.Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+                    <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Light"
+                                  Variant="Variant.Text"
+                                  Click="@(() => NavTo("/"))"
+                                  Text="Reader" />
+                </RadzenStack>
+            </div>
+        </RadzenHeader>
+        <RadzenSidebar Responsive="false" @bind-Expanded="@_sidebarExpanded" style="position: absolute; z-index: 3">
+            <RadzenStack AlignItems="AlignItems.End" Class="rz-p-2">
+                <RadzenButton Icon="west" Variant="Variant.Text" ButtonStyle="ButtonStyle.Secondary" Click="@(() => _sidebarExpanded = false)" />
+            </RadzenStack>
+            <RadzenPanelMenu>
+                <AuthorizeView>
+                    <Authorized>
+                        <RadzenPanelMenuItem Click=@(() => NavTo("/admins")) Text="Admin" Icon="admin_panel_settings" Visible=@(context.User.IsInRole("Admin")) />
+                        <RadzenMenuItem Click=@(() => NavTo($"/account")) Text="My Account" Icon="manage_accounts" />
+                        <RadzenPanelMenuItem Click=@(() => NavTo("/signout")) Text="Logout" Icon="logout" />
+                    </Authorized>
+                    <NotAuthorized>
+                        <RadzenPanelMenuItem Click=@(() => NavTo("/signup")) Text="Sign Up" />
+                        <RadzenPanelMenuItem Click=@(() => NavTo("/signin")) Text="Sign In" />
+                    </NotAuthorized>
+                </AuthorizeView>
+            </RadzenPanelMenu>
+        </RadzenSidebar>
+        <RadzenBody>
+            <div class="rz-p-4">
+                @Body
+            </div>
+        </RadzenBody>
+        @if (_sidebarExpanded)
+        {
+            <div @onclick="@(() => _sidebarExpanded = false)" class="rz-dialog-mask" style="position: absolute; z-index: 2"></div>
+        }
+    </RadzenLayout>
+}
+
 
 @code {
     bool _sidebarExpanded = false;
+    bool _isMobileView { get; set; } = false;
+
+    protected override async void OnInitialized()
+    {
+        string userAgent = await _jsRuntime.InvokeAsync<string>("getUserAgent");
+        _isMobileView = userAgent.Contains("iphone", StringComparison.InvariantCultureIgnoreCase) || userAgent.Contains("android", StringComparison.InvariantCultureIgnoreCase) ? true : false;
+    }
+
+    void NavTo(string url)
+    {
+        _sidebarExpanded = false;
+        StateHasChanged();
+        _navigationManager.NavigateTo(url);
+    }
 }
